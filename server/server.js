@@ -2,10 +2,12 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 const PORT = 8080;
+const jwt = require("jsonwebtoken");
+var cookieParser = require("cookie-parser");
 
 const cors = require("cors");
 app.use(cors());
-
+app.use(cookieParser());
 app.use(bodyParser.json());
 
 const bcrypt = require("bcrypt");
@@ -41,20 +43,21 @@ app.post("/api/auth", async (req, res) => {
     }
   } else if (type === "login") {
     if (!user) {
-      res.status(401).send({ message: "Invalid username or password" });
+      res.status(401).send({ message: "Incorrect username or password" });
     } else {
       try {
         if (await bcrypt.compare(password, user.password)) {
           res.send({ message: "Login successful!" });
         } else {
-          res.status(401).send({ message: "Invalid username or password" });
+          res.status(401).send({ message: "Incorrect username or password" });
         }
       } catch (error) {
         res.status(500).send({ message: "Error logging in" });
       }
     }
   }
-  // printUsers();
+
+  printUsers();
   // truncateUsers();
 });
 

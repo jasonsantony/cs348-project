@@ -12,8 +12,6 @@ import {
   Stack,
 } from "@mantine/core";
 
-import { jwtDecode } from "jwt-decode";
-
 export default function AuthPage(props: PaperProps) {
   const [type, toggle] = useToggle(["Login", "Register"]);
   const form = useForm({
@@ -99,6 +97,17 @@ export default function AuthPage(props: PaperProps) {
             <Button type="submit" radius="xl">
               {upperFirst(type)}
             </Button>
+            <Anchor
+              component="button"
+              type="button"
+              c="dimmed"
+              size="xs"
+              onClick={() => {
+                fetch("http://localhost:8080/api/secure");
+              }}
+            >
+              Test
+            </Anchor>
           </Group>
         </form>
       </Paper>
@@ -118,11 +127,6 @@ function sendDataToBackend(data: Object) {
     .then((response) => response.json())
     .then((data) => {
       console.log("Success:", data);
-      // Store the JWT in localStorage
-      localStorage.setItem("token", data.token);
-      // Decode the JWT to get user data
-      const decoded = jwtDecode(data.token);
-      console.log(decoded);
     })
     .catch((error) => {
       console.error("Error:", error);
