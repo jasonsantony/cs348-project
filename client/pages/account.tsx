@@ -201,12 +201,12 @@ const BioText = () => <p style={{ fontWeight: "600" }}>Edit Bio</p>;
 function DeleteAccountButton() {
   const openDeleteModal = () =>
     modals.openConfirmModal({
-      title: "Delete your profile",
+      title: "Delete your account",
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to delete your profile? This action is
-          destructive and you will have to contact support to restore your data.
+          Are you sure you want to delete your account? This action is
+          permanent.
         </Text>
       ),
       labels: { confirm: "Delete account", cancel: "No don't delete it" },
@@ -220,6 +220,7 @@ function DeleteAccountButton() {
       onClick={openDeleteModal}
       color="red"
       style={{ borderRadius: "25px", height: "45px" }}
+      size="md"
     >
       Delete account
     </Button>
