@@ -1,3 +1,4 @@
+import React from "react";
 import { useToggle, upperFirst } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import {
@@ -11,6 +12,8 @@ import {
   Anchor,
   Stack,
 } from "@mantine/core";
+
+import { useRouter } from "next/router";
 
 export default function AuthPage(props: PaperProps) {
   const [type, toggle] = useToggle(["Login", "Register"]);
@@ -36,8 +39,33 @@ export default function AuthPage(props: PaperProps) {
       type: type.toLowerCase(),
       ...form.values,
     };
-    sendDataToBackend(formData);
+    authorize(formData);
   };
+
+  const router = useRouter();
+  function authorize(data: Object) {
+    console.log(data);
+    fetch("http://localhost:8080/api/auth", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (
+          data.message === "Login successful!" ||
+          data.message === "User registered successfully!"
+        ) {
+          localStorage.setItem("username", data.username);
+          router.push("/account");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
 
   return (
     <div className="">
@@ -97,38 +125,9 @@ export default function AuthPage(props: PaperProps) {
             <Button type="submit" radius="xl">
               {upperFirst(type)}
             </Button>
-            <Anchor
-              component="button"
-              type="button"
-              c="dimmed"
-              size="xs"
-              onClick={() => {
-                fetch("http://localhost:8080/api/secure");
-              }}
-            >
-              Test
-            </Anchor>
           </Group>
         </form>
       </Paper>
     </div>
   );
-}
-
-function sendDataToBackend(data: Object) {
-  console.log(data);
-  fetch("http://localhost:8080/api/auth", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Success:", data);
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
 }

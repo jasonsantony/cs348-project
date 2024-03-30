@@ -19,7 +19,6 @@
     "dotenv": "^16.4.5",
     "embla-carousel-react": "^8.0.0",
     "express": "^4.19.2",
-    "jsonwebtoken": "^9.0.2",
     "recharts": "^2.12.3",
     "sequelize": "^6.37.1",
     "sqlite3": "^5.1.7"

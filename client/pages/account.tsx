@@ -1,3 +1,7 @@
+import React from "react";
+
+import { useRouter } from "next/router";
+
 import {
   Container,
   Grid,
@@ -20,14 +24,84 @@ import Superscript from "@tiptap/extension-superscript";
 import SubScript from "@tiptap/extension-subscript";
 
 import { modals } from "@mantine/modals";
+import { log } from "console";
 
 const PRIMARY_COL_HEIGHT = rem(440);
 
-export function LeadGrid(props: PaperProps) {
+export default function AccountGrid(props: PaperProps) {
   const SECONDARY_COL_HEIGHT = `calc(${PRIMARY_COL_HEIGHT} / 2 - var(--mantine-spacing-md) / 2)`;
+
+  const router = useRouter();
+  function LogOutButton() {
+    return (
+      <Button
+        onClick={() => {
+          localStorage.removeItem("username");
+          router.push("/");
+          console.log("Logged out");
+        }}
+        style={{ borderRadius: "12px", height: "45px" }}
+        size="md"
+      >
+        Log out
+      </Button>
+    );
+  }
+
+  function DeleteAccountButton() {
+    const openDeleteModal = () =>
+      modals.openConfirmModal({
+        title: "Delete your account",
+        centered: true,
+        children: (
+          <Text size="sm">
+            Are you sure you want to delete your account? This action is
+            permanent.
+          </Text>
+        ),
+        labels: { confirm: "Delete account", cancel: "No don't delete it" },
+        confirmProps: { color: "red" },
+        onConfirm: () =>
+          deleteAccountButtonConfirm(String(localStorage.getItem("username"))),
+      });
+
+    return (
+      <Button
+        onClick={openDeleteModal}
+        color="red"
+        style={{ borderRadius: "25px", height: "45px" }}
+        size="md"
+      >
+        Delete account
+      </Button>
+    );
+  }
+
+  function deleteAccountButtonConfirm(username: string) {
+    fetch(`http://localhost:8080/api/delete-account/${username}`, {
+      method: "DELETE",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        localStorage.removeItem("username");
+        router.push("/auth-page");
+        console.log("Account deleted");
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
 
   return (
     <div className="">
+      <div style={{ position: "absolute", top: "30px", right: "30px" }}>
+        <LogOutButton />
+      </div>
       <Paper
         radius="lg"
         withBorder
@@ -77,16 +151,13 @@ export function LeadGrid(props: PaperProps) {
                     data={["User", "Admin"]}
                     defaultValue="User"
                     onChange={(newValue) => {
-                      const response = fetch(
-                        "https://your-backend-url.com/api-endpoint",
-                        {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({ value: newValue }),
-                        }
-                      )
+                      fetch("https://your-backend-url.com/api-endpoint", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ value: newValue }),
+                      })
                         .then((res) => {
                           if (res.ok) return res.json();
                           else {
@@ -145,7 +216,7 @@ function Editor() {
   });
 
   return (
-    <RichTextEditor editor={editor} className="h-full overflow-auto">
+    <RichTextEditor editor={editor} className="h-full overflow-auto w-full">
       <RichTextEditor.Toolbar sticky stickyOffset={0}>
         <RichTextEditor.ControlsGroup>
           <RichTextEditor.Bold />
@@ -197,32 +268,3 @@ function Editor() {
 }
 
 const BioText = () => <p style={{ fontWeight: "600" }}>Edit Bio</p>;
-
-function DeleteAccountButton() {
-  const openDeleteModal = () =>
-    modals.openConfirmModal({
-      title: "Delete your account",
-      centered: true,
-      children: (
-        <Text size="sm">
-          Are you sure you want to delete your account? This action is
-          permanent.
-        </Text>
-      ),
-      labels: { confirm: "Delete account", cancel: "No don't delete it" },
-      confirmProps: { color: "red" },
-      onCancel: () => console.log("Cancel"),
-      onConfirm: () => console.log("Confirmed"),
-    });
-
-  return (
-    <Button
-      onClick={openDeleteModal}
-      color="red"
-      style={{ borderRadius: "25px", height: "45px" }}
-      size="md"
-    >
-      Delete account
-    </Button>
-  );
-}

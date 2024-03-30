@@ -2,7 +2,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 const PORT = 8080;
-const jwt = require("jsonwebtoken");
 var cookieParser = require("cookie-parser");
 
 const cors = require("cors");
@@ -14,6 +13,10 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
 const { User, Show, Review, sequelize } = require("./models");
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 
 app.get("/api/home", (req, res) => {
   res.send({ message: "Hello World!" });
@@ -36,7 +39,10 @@ app.post("/api/auth", async (req, res) => {
           is_admin: 0,
           bio: "",
         });
-        res.send({ message: "User registered successfully!" });
+        res.send({
+          message: "User registered successfully!",
+          username: newUser.username,
+        });
       } catch (error) {
         res.status(500).send({ message: "Error registering user" });
       }
@@ -47,7 +53,7 @@ app.post("/api/auth", async (req, res) => {
     } else {
       try {
         if (await bcrypt.compare(password, user.password)) {
-          res.send({ message: "Login successful!" });
+          res.send({ message: "Login successful!", username: user.username });
         } else {
           res.status(401).send({ message: "Incorrect username or password" });
         }
@@ -56,16 +62,28 @@ app.post("/api/auth", async (req, res) => {
       }
     }
   }
+});
 
+app.delete("/api/delete-account/:username", async (req, res) => {
+  console.log("here");
+  const username = req.params.username;
+
+  try {
+    const user = await User.findOne({ where: { username: username } });
+
+    if (!user) {
+      res.status(404).send({ message: "User not found" });
+    } else {
+      await User.destroy({ where: { username: username } });
+      res.status(200).send({ message: "User deleted successfully" });
+    }
+  } catch (error) {
+    res.status(500).send({ message: "Error deleting user" });
+  }
   printUsers();
-  // truncateUsers();
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
-// testing database connection
+// testing
 async function printUsers() {
   try {
     const users = await User.findAll();
@@ -75,7 +93,7 @@ async function printUsers() {
   }
 }
 
-// testing database connection
+// testing
 async function truncateUsers() {
   try {
     await User.destroy({ where: {}, truncate: true });
