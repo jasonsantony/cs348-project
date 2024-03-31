@@ -62,6 +62,7 @@ app.post("/api/auth", async (req, res) => {
       }
     }
   }
+  printUsers();
 });
 
 app.delete("/api/delete-account/:username", async (req, res) => {
@@ -79,6 +80,39 @@ app.delete("/api/delete-account/:username", async (req, res) => {
     }
   } catch (error) {
     res.status(500).send({ message: "Error deleting user" });
+  }
+  printUsers();
+});
+
+app.get("/api/user/:username/bio", async (req, res) => {
+  const { username } = req.params;
+
+  const user = await User.findOne({ where: { username: username } });
+
+  if (!user) {
+    res.status(404).send({ message: "User not found" });
+  } else {
+    res.send({ bio: user.bio });
+  }
+});
+
+app.post("/api/user/:username/bio", async (req, res) => {
+  const { username } = req.params;
+  const { bio } = req.body;
+
+  try {
+    const user = await User.findOne({ where: { username: username } });
+
+    if (!user) {
+      res.status(404).send({ message: "User not found" });
+    } else {
+      user.bio = bio;
+      await user.save();
+      res.send({ message: "Bio updated successfully" });
+    }
+  } catch (error) {
+    console.error("Error updating bio:", error);
+    res.status(500).send({ message: "Error updating bio" });
   }
   printUsers();
 });

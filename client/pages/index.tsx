@@ -1,6 +1,5 @@
 import React from "react";
 import AuthPage from "./auth-page";
-import { LeadGrid } from "./account";
 
 const Home = () => {
   return (

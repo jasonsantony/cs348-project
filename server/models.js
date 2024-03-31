@@ -100,6 +100,22 @@ const Review = sequelize.define(
     timestamp: {
       type: DataTypes.TEXT,
     },
+    user_id: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: User,
+        key: "user_id",
+      },
+      onDelete: "CASCADE",
+    },
+    show_id: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: Show,
+        key: "show_id",
+      },
+      onDelete: "CASCADE",
+    },
   },
   {
     indexes: [

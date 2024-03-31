@@ -7,10 +7,12 @@ import { ModalsProvider } from "@mantine/modals";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <MantineProvider>
-      <ModalsProvider>
-        <Component {...pageProps} />
-      </ModalsProvider>
-    </MantineProvider>
+    <div className="fixed inset-0">
+      <MantineProvider>
+        <ModalsProvider>
+          <Component {...pageProps} />
+        </ModalsProvider>
+      </MantineProvider>
+    </div>
   );
 }
