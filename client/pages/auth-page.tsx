@@ -34,6 +34,13 @@ export default function AuthPage(props: PaperProps) {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+
+    form.validate();
+    // Check if there are any validation errors
+    if (Object.keys(form.errors).length > 0) {
+      return;
+    }
+
     const formData = {
       type: type.toLowerCase(),
       ...form.values,
@@ -51,7 +58,12 @@ export default function AuthPage(props: PaperProps) {
       },
       body: JSON.stringify(data),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Invalid username or password");
+        }
+        return response.json();
+      })
       .then((data) => {
         if (
           data.message === "Login successful!" ||
