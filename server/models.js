@@ -49,6 +49,7 @@ const Show = sequelize.define(
     },
     title: {
       type: DataTypes.STRING(255),
+      unique: true,
     },
     director: {
       type: DataTypes.STRING(255),
