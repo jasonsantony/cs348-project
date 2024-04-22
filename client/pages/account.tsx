@@ -293,9 +293,9 @@ const ThankYouNote = () => {
       color={colors[colorIndex]}
       onClick={handleClick}
       style={{ borderRadius: "25px", height: "45px" }}
-      size="md"
+      size="xl"
     >
-      Thank you for using my app!
+      🎉 🎉 🎉
     </Button>
   );
 };
