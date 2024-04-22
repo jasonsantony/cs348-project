@@ -26,9 +26,7 @@ export default function AuthPage(props: PaperProps) {
       username: (val) =>
         /^[a-zA-Z0-9._]+$/.test(val) ? null : "Invalid username",
       password: (val) =>
-        val.length <= 6
-          ? "Password should include at least 6 characters"
-          : null,
+        val.length < 6 ? "Password should include at least 6 characters" : null,
     },
   });
 
