@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-import styled from "styled-components";
-
 import { useRouter } from "next/router";
 
 import {
@@ -11,7 +9,6 @@ import {
   rem,
   Paper,
   PaperProps,
-  SegmentedControl,
   Button,
   Text,
 } from "@mantine/core";
