@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+
+import styled from "styled-components";
 
 import { useRouter } from "next/router";
 
@@ -247,32 +249,7 @@ export default function AccountGrid(props: PaperProps) {
                     height: SECONDARY_COL_HEIGHT, // Set the height to SECONDARY_COL_HEIGHT
                   }}
                 >
-                  <SegmentedControl
-                    radius="xl"
-                    size="md"
-                    data={["User", "Admin"]}
-                    defaultValue="User"
-                    onChange={(newValue) => {
-                      fetch("https://your-backend-url.com/api-endpoint", {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ value: newValue }),
-                      })
-                        .then((res) => {
-                          if (res.ok) return res.json();
-                          else {
-                            throw new Error("Error");
-                          }
-                        })
-                        .then((data) => {
-                          console.log(data);
-                          // do whatever
-                        })
-                        .catch((error) => console.error(error));
-                    }}
-                  />
+                  <ThankYouNote />
                 </Paper>
               </Grid.Col>
               <Grid.Col>
@@ -301,3 +278,24 @@ export default function AccountGrid(props: PaperProps) {
 }
 
 const BioText = () => <p style={{ fontWeight: "600" }}>Edit Bio</p>;
+
+const colors = ["blue", "red", "green", "yellow", "orange", "pink"];
+
+const ThankYouNote = () => {
+  const [colorIndex, setColorIndex] = useState(0);
+
+  const handleClick = () => {
+    setColorIndex((colorIndex + 1) % colors.length);
+  };
+
+  return (
+    <Button
+      color={colors[colorIndex]}
+      onClick={handleClick}
+      style={{ borderRadius: "25px", height: "45px" }}
+      size="md"
+    >
+      Thank you for using my app!
+    </Button>
+  );
+};
