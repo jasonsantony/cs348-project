@@ -5,7 +5,7 @@ import {
   TypographyStylesProvider,
   Paper,
 } from "@mantine/core";
-import classes from "../styles/comment.module.css";
+import classes from "../../styles/comment.module.css";
 
 export default function Comment() {
   return (

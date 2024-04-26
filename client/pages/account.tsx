@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 import { useRouter } from "next/router";
 
@@ -34,7 +34,7 @@ export default function AccountGrid(props: PaperProps) {
     return (
       <Button
         onClick={() => {
-          localStorage.removeItem("username");
+          localStorage.clear();
           router.push("/");
           console.log("Logged out");
         }}
@@ -86,7 +86,7 @@ export default function AccountGrid(props: PaperProps) {
         return response.json();
       })
       .then((data) => {
-        localStorage.removeItem("username");
+        localStorage.clear();
         router.push("/auth-page");
         console.log("Account deleted");
       })

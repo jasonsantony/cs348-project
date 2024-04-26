@@ -12,10 +12,11 @@ app.use(bodyParser.json());
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
-const { User, Show, Review, sequelize } = require("./models");
+const { User, Review, sequelize } = require("./models");
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  printUsers();
 });
 
 app.get("/api/home", (req, res) => {
@@ -38,6 +39,7 @@ app.post("/api/auth", async (req, res) => {
           password: hashedPassword,
           is_admin: 0,
           bio: "",
+          num_reviews: 0,
         });
         res.send({
           message: "User registered successfully!",

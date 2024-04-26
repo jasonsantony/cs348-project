@@ -30,13 +30,55 @@ const User = sequelize.define(
     bio: {
       type: DataTypes.TEXT,
     },
-    num_reviews: {
-      type: DataTypes.INTEGER,
-    },
   },
   {
     indexes: [
       { unique: true, fields: ["username"] }, // Index for username field
+    ],
+  }
+);
+
+// Define Show model with indexes
+const Show = sequelize.define(
+  "Show",
+  {
+    show_id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    title: {
+      type: DataTypes.STRING(255),
+      unique: true,
+    },
+    director: {
+      type: DataTypes.STRING(255),
+    },
+    release_month: {
+      type: DataTypes.INTEGER,
+    },
+    release_year: {
+      type: DataTypes.INTEGER,
+    },
+    runtime: {
+      type: DataTypes.INTEGER,
+    },
+    num_episodes: {
+      type: DataTypes.INTEGER,
+    },
+    premise: {
+      type: DataTypes.TEXT,
+    },
+    num_ratings: {
+      type: DataTypes.INTEGER,
+    },
+    avg_rating: {
+      type: DataTypes.REAL,
+    },
+  },
+  {
+    indexes: [
+      { fields: ["title"] }, // Index for title field
     ],
   }
 );
@@ -49,15 +91,6 @@ const Review = sequelize.define(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
-    },
-    show_title: {
-      type: DataTypes.STRING(255),
-    },
-    show_director: {
-      type: DataTypes.STRING(255),
-    },
-    show_release_year: {
-      type: DataTypes.INTEGER,
     },
     rating_value: {
       type: DataTypes.INTEGER,
@@ -76,10 +109,19 @@ const Review = sequelize.define(
       },
       onDelete: "CASCADE",
     },
+    show_id: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: Show,
+        key: "show_id",
+      },
+      onDelete: "CASCADE",
+    },
   },
   {
     indexes: [
       { fields: ["user_id"] }, // Index for user_id field
+      { fields: ["show_id"] }, // Index for show_id field
     ],
   }
 );
@@ -87,6 +129,9 @@ const Review = sequelize.define(
 // Define relationships
 User.hasMany(Review, { foreignKey: "user_id" });
 Review.belongsTo(User, { foreignKey: "user_id" });
+
+Show.hasMany(Review, { foreignKey: "show_id" });
+Review.belongsTo(Show, { foreignKey: "show_id" });
 
 // Sync models with database
 sequelize
@@ -101,6 +146,7 @@ sequelize
 // Export models
 module.exports = {
   User,
+  Show,
   Review,
   sequelize,
 };
