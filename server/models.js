@@ -30,9 +30,6 @@ const User = sequelize.define(
     bio: {
       type: DataTypes.TEXT,
     },
-    num_reviews: {
-      type: DataTypes.INTEGER,
-    },
   },
   {
     indexes: [

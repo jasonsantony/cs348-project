@@ -39,7 +39,6 @@ app.post("/api/auth", async (req, res) => {
           password: hashedPassword,
           is_admin: 0,
           bio: "",
-          num_reviews: 0,
         });
         res.send({
           message: "User registered successfully!",
@@ -116,7 +115,42 @@ app.post("/api/user/:username/bio", async (req, res) => {
     console.error("Error updating bio:", error);
     res.status(500).send({ message: "Error updating bio" });
   }
-  printUsers();
+});
+
+app.get("/api/user-list", async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: ["username", "bio"],
+    });
+    const result = users.map((user) => {
+      const bioMatch = user.bio.match(/<.*?>(.*?)<\/.*?>/);
+      const bio = bioMatch ? bioMatch[1] : "";
+      const trimmedBio = bio.length > 100 ? `${bio.substring(0, 100)}...` : bio;
+      return {
+        username: user.username,
+        bio: trimmedBio,
+      };
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+app.get("/api/user/:username/reviews", (req, res) => {
+  User.findOne({ where: { username: req.params.username } })
+    .then((user) => {
+      if (!user) return res.status(404).send({ message: "User not found" });
+
+      return Review.findAll({ where: { user_id: user.user_id } });
+    })
+    .then((reviews) => {
+      res.send(reviews);
+    })
+    .catch((error) => {
+      console.error("Error fetching reviews:", error);
+      res.status(500).send({ message: "Server error" });
+    });
 });
 
 // testing

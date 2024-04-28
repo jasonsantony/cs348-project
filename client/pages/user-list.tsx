@@ -1,5 +1,6 @@
 import { use, useEffect, useState } from "react";
 import {
+  Paper,
   Table,
   ScrollArea,
   UnstyledButton,
@@ -10,6 +11,7 @@ import {
   TextInput,
   rem,
   keys,
+  PaperProps,
 } from "@mantine/core";
 import {
   IconSelector,
@@ -17,7 +19,8 @@ import {
   IconChevronUp,
   IconSearch,
 } from "@tabler/icons-react";
-import classes from "../styles/results.module.css";
+import classes from "../styles/user-list.module.css";
+import { Router, useRouter } from "next/router";
 
 interface RowData {
   username: string;
@@ -87,119 +90,137 @@ function sortData(
   );
 }
 
-const data = [
-  {
-    username: "jason",
-    bio: "hello there",
-  },
-];
-
-function TableSort() {
-  const [search, setSearch] = useState("");
-  const [sortedData, setSortedData] = useState(data);
-  const [sortBy, setSortBy] = useState<keyof RowData | null>(null);
-  const [reverseSortDirection, setReverseSortDirection] = useState(false);
-
-  const setSorting = (field: keyof RowData) => {
-    const reversed = field === sortBy ? !reverseSortDirection : false;
-    setReverseSortDirection(reversed);
-    setSortBy(field);
-    setSortedData(sortData(data, { sortBy: field, reversed, search }));
-  };
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = event.currentTarget;
-    setSearch(value);
-    setSortedData(
-      sortData(data, { sortBy, reversed: reverseSortDirection, search: value })
-    );
-  };
-
-  const rows = sortedData.map((row) => (
-    <Table.Tr key={row.username}>
-      <Table.Td>
-        <Anchor component="button" fz="sm">
-          {row.username}
-        </Anchor>
-      </Table.Td>
-      <Table.Td>{row.bio}</Table.Td>
-    </Table.Tr>
-  ));
-
-  return (
-    <ScrollArea>
-      <TextInput
-        placeholder="Search by any field"
-        mb="md"
-        leftSection={
-          <IconSearch
-            style={{ width: rem(16), height: rem(16) }}
-            stroke={1.5}
-          />
-        }
-        value={search}
-        onChange={handleSearchChange}
-      />
-      <Table
-        horizontalSpacing="md"
-        verticalSpacing="xs"
-        miw={700}
-        layout="fixed"
-      >
-        <Table.Tbody>
-          <Table.Tr>
-            <Th
-              sorted={sortBy === "username"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("username")}
-            >
-              Username
-            </Th>
-            <Th
-              sorted={sortBy === "bio"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("bio")}
-            >
-              Bio
-            </Th>
-          </Table.Tr>
-        </Table.Tbody>
-        <Table.Tbody>
-          {rows.length > 0 ? (
-            rows
-          ) : (
-            <Table.Tr>
-              <Table.Td colSpan={Object.keys(data[0]).length}>
-                <Text fw={500} ta="center">
-                  Nothing found
-                </Text>
-              </Table.Td>
-            </Table.Tr>
-          )}
-        </Table.Tbody>
-      </Table>
-    </ScrollArea>
-  );
-}
-
-const [users, setUsers] = useState<RowJson[]>([]);
-export default function UserList() {
+export default function UserList(props: PaperProps) {
+  const [users, setUsers] = useState<RowJson[]>([]);
   useEffect(() => {
-    fetch("https://localhost:8080/api/user-list")
+    fetch("http://localhost:8080/api/user-list")
       .then((response) => response.json())
       .then((data) => {
         setUsers(data);
       })
       .catch((error) => {
-        console.error("Error fetching data: ", error);
+        console.error("Error fetching users: ", error);
       });
   }, []);
 
-  // TODO: Display the user list
+  const router = useRouter();
+  function TableSort() {
+    const [search, setSearch] = useState("");
+    const [sortedData, setSortedData] = useState(users);
+    const [sortBy, setSortBy] = useState<keyof RowData | null>(null);
+    const [reverseSortDirection, setReverseSortDirection] = useState(false);
+
+    const setSorting = (field: keyof RowData) => {
+      const reversed = field === sortBy ? !reverseSortDirection : false;
+      setReverseSortDirection(reversed);
+      setSortBy(field);
+      setSortedData(sortData(users, { sortBy: field, reversed, search }));
+    };
+
+    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { value } = event.currentTarget;
+      setSearch(value);
+      setSortedData(
+        sortData(users, {
+          sortBy,
+          reversed: reverseSortDirection,
+          search: value,
+        })
+      );
+    };
+
+    const rows = sortedData.map((row) => (
+      <Table.Tr key={row.username}>
+        <Table.Td>
+          <Anchor
+            component="button"
+            fz="sm"
+            onClick={() => {
+              localStorage.setItem("blogPageUsername", row.username);
+              router.push("/blog-page");
+            }}
+          >
+            {row.username}
+          </Anchor>
+        </Table.Td>
+        <Table.Td>{row.bio}</Table.Td>
+      </Table.Tr>
+    ));
+
+    return (
+      <ScrollArea>
+        <TextInput
+          placeholder="Search by any field"
+          mb="md"
+          leftSection={
+            <IconSearch
+              style={{ width: rem(16), height: rem(16) }}
+              stroke={1.5}
+            />
+          }
+          value={search}
+          onChange={handleSearchChange}
+        />
+        <Table
+          horizontalSpacing="md"
+          verticalSpacing="xs"
+          miw={700}
+          layout="fixed"
+        >
+          <Table.Tbody>
+            <Table.Tr>
+              <Th
+                sorted={sortBy === "username"}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting("username")}
+              >
+                Username
+              </Th>
+              <Table.Th>Bio</Table.Th>
+            </Table.Tr>
+          </Table.Tbody>
+          <Table.Tbody>
+            {rows.length > 0 ? (
+              rows
+            ) : (
+              <Table.Tr>
+                <Table.Td colSpan={users[0] ? Object.keys(users[0]).length : 0}>
+                  <Text fw={500} ta="center">
+                    Nothing found
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+            )}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
+    );
+  }
 
   return (
-    <div className={classes.wrapper}>
-      <TableSort />
+    <div
+      className={classes.wrapper}
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+      }}
+    >
+      <Paper
+        radius="lg"
+        p="xl"
+        withBorder
+        {...props}
+        style={{
+          maxWidth: "87.5%",
+          width: "100%",
+          height: "75vh",
+          overflow: "auto",
+        }}
+      >
+        <TableSort />
+      </Paper>
     </div>
   );
 }
