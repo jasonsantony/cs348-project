@@ -54,6 +54,7 @@ export default function BlogPage(props: PaperProps) {
     med: 0,
     max: 0,
   });
+  const [statsRefresh, setStatsRefresh] = useState(false);
 
   const router = useRouter();
 
@@ -84,6 +85,7 @@ export default function BlogPage(props: PaperProps) {
       .then((response) => response.json())
       .then((data) => {
         setReviews(data);
+        setStatsRefresh(!statsRefresh);
       })
       .catch((error) => {
         console.error("Error fetching reviews", error);
@@ -316,14 +318,13 @@ export default function BlogPage(props: PaperProps) {
       } catch (error) {
         console.error("Error:", error);
       }
-
-      setRefresh(!refresh);
       close();
       setReviewText("");
       setSliderValue(5);
       setDirector("");
       setYear("");
       setTitle("");
+      setRefresh(!refresh);
     };
 
     return (
@@ -450,7 +451,7 @@ export default function BlogPage(props: PaperProps) {
       ratings.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
 
     setStatistics({ mean, min, med, max });
-  }, [refresh]);
+  }, [statsRefresh]);
 
   return (
     <div
