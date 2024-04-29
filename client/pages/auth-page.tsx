@@ -68,7 +68,7 @@ export default function AuthPage(props: PaperProps) {
           data.message === "User registered successfully!"
         ) {
           localStorage.setItem("username", data.username);
-          router.push("/account");
+          router.push("/user-list");
         }
       })
       .catch((error) => {

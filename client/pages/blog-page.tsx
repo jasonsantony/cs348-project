@@ -8,7 +8,13 @@ import {
   Modal,
   Button,
   Slider,
+  TextInput,
+  ActionIcon,
+  rem,
+  HoverCard,
 } from "@mantine/core";
+
+import { IconTrash, IconHome, IconUser, IconLogout } from "@tabler/icons-react";
 
 import { useDisclosure } from "@mantine/hooks";
 
@@ -22,11 +28,13 @@ import Superscript from "@tiptap/extension-superscript";
 import SubScript from "@tiptap/extension-subscript";
 
 import classes from "../styles/review.module.css";
-import { useEffect, useState } from "react";
-import { format, formatDistanceToNow, parseISO } from "date-fns";
+import { use, useEffect, useState } from "react";
+import { Router, useRouter } from "next/router";
+import { format, formatDistanceToNow, parseISO, set } from "date-fns";
 import parse from "html-react-parser";
 
 type ReviewJson = {
+  review_id: number;
   show_title: string;
   show_director: string;
   show_release_year: number;
@@ -39,6 +47,16 @@ export default function BlogPage(props: PaperProps) {
   const [reviews, setReviews] = useState<ReviewJson[]>([]);
   const [blogPageUsername, setBlogPageUsername] = useState<string>("");
   const [username, setUsername] = useState<string>("");
+  const [refresh, setRefresh] = useState(false);
+  const [statistics, setStatistics] = useState({
+    mean: 0,
+    min: 0,
+    med: 0,
+    max: 0,
+  });
+
+  const router = useRouter();
+
   useEffect(() => {
     setBlogPageUsername(localStorage.getItem("blogPageUsername") || "");
   }, []);
@@ -70,7 +88,7 @@ export default function BlogPage(props: PaperProps) {
       .catch((error) => {
         console.error("Error fetching reviews", error);
       });
-  }, []);
+  }, [refresh]);
 
   const [bio, setBio] = useState("");
   function BioEditor() {
@@ -205,7 +223,7 @@ export default function BlogPage(props: PaperProps) {
         <Group>
           <div style={{ position: "relative", width: 80, height: 80 }}>
             <RingProgress
-              sections={[{ value: rating_value, color: color }]}
+              sections={[{ value: rating_value * 10, color: color }]}
               roundCaps
               size={80}
               label={
@@ -216,11 +234,18 @@ export default function BlogPage(props: PaperProps) {
             />
           </div>
           <div>
-            <Text fz="xl">{show_title}</Text>
-            <Text fz="xs">
-              Directed by {show_director}, {show_release_year}
+            <Text fz="xl" style={{ marginBottom: "0px" }}>
+              {show_title}
             </Text>
-            <Text fz="xs" c="dimmed" title={readableTimestamp}>
+            <Text fz="xs" style={{ marginBottom: "0px" }}>
+              Directed by: {show_director}, {show_release_year}
+            </Text>
+            <Text
+              fz="xs"
+              c="dimmed"
+              title={readableTimestamp}
+              style={{ marginBottom: "0px" }}
+            >
               Reviewed {timeSinceReview} ago
             </Text>
           </div>
@@ -234,8 +259,11 @@ export default function BlogPage(props: PaperProps) {
 
   function WriteReview() {
     const [opened, { open, close }] = useDisclosure(false);
-    const [reviewContent, setReviewContent] = useState("");
+    const [reviewText, setReviewText] = useState("");
     const [sliderValue, setSliderValue] = useState(5);
+    const [director, setDirector] = useState("");
+    const [year, setYear] = useState("");
+    const [title, setTitle] = useState("");
 
     const editor = useEditor({
       extensions: [
@@ -250,62 +278,72 @@ export default function BlogPage(props: PaperProps) {
       content: "",
       onUpdate: () => {
         if (editor) {
-          setReviewContent(editor.getHTML());
+          setReviewText(editor.getHTML());
         }
       },
     });
 
     const submitReview = async () => {
-      // use the reviewContent variable to submit the content of the editor
+      const review: ReviewJson = {
+        review_id: -1,
+        show_title: title,
+        show_director: director,
+        show_release_year: parseInt(year),
+        rating_value: sliderValue,
+        review_text: reviewText,
+        timestamp: new Date().toISOString(),
+      };
 
-      console.log(reviewContent, sliderValue);
+      try {
+        const response = await fetch(
+          `http://localhost:8080/api/user/${localStorage.getItem(
+            "username"
+          )}/create-review`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(review),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        console.log("Review submitted successfully");
+      } catch (error) {
+        console.error("Error:", error);
+      }
+
+      setRefresh(!refresh);
       close();
+      setReviewText("");
+      setSliderValue(5);
+      setDirector("");
+      setYear("");
+      setTitle("");
     };
-
-    function ReviewSlider() {
-      const marks = [
-        { value: 0, label: "0" },
-        { value: 1, label: "1" },
-        { value: 2, label: "2" },
-        { value: 3, label: "3" },
-        { value: 4, label: "4" },
-        { value: 5, label: "5" },
-        { value: 6, label: "6" },
-        { value: 7, label: "7" },
-        { value: 8, label: "8" },
-        { value: 9, label: "9" },
-        { value: 10, label: "10" },
-      ];
-      return (
-        <>
-          <Slider
-            value={sliderValue}
-            onChange={(val) => setSliderValue(val)}
-            min={0}
-            max={10}
-            label={(val) => marks.find((mark) => mark.value === val)!.label}
-            step={1}
-            marks={marks}
-            styles={{
-              markLabel: { display: "none" },
-              root: { margin: "40px 0" },
-            }}
-          />
-        </>
-      );
-    }
 
     return (
       <>
         <Modal
           opened={opened}
           onClose={close}
-          title="Write a Review"
+          title="Compose Review"
           size="87.5%"
           radius={0}
-          yOffset="15%"
+          yOffset="14%"
           transitionProps={{ transition: "fade", duration: 200 }}
         >
+          <TitleInput title={title} setTitle={setTitle} />
+          <DirectorInput director={director} setDirector={setDirector} />
+          <YearInput year={year} setYear={setYear} />
+          <div style={{ height: "10px" }} />
+          <Text size="sm" style={{ marginBottom: "5px" }}>
+            Your Thoughts
+          </Text>
           <RichTextEditor
             editor={editor}
             className="h-full overflow-auto w-full"
@@ -357,14 +395,62 @@ export default function BlogPage(props: PaperProps) {
 
             <RichTextEditor.Content />
           </RichTextEditor>
-          <ReviewSlider />
+          <Text size="sm" style={{ marginTop: "10px" }}>
+            Rating
+          </Text>
+          <ReviewSlider
+            sliderValue={sliderValue}
+            setSliderValue={setSliderValue}
+          />
           <Button onClick={submitReview}>Submit Review</Button>
         </Modal>
 
-        <Button onClick={open}>Write a Review</Button>
+        <Button onClick={open}>Create Review</Button>
       </>
     );
   }
+
+  const handleDelete = (review_id: string) => {
+    fetch(`http://localhost:8080/api/review/${review_id}/delete-review`, {
+      method: "DELETE",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Delete operation failed");
+        }
+        setRefresh(!refresh);
+      })
+      .catch((error) => {
+        console.error("Error deleting item:", error);
+      });
+  };
+
+  function LogOutButton() {
+    return (
+      <Button
+        onClick={() => {
+          localStorage.clear();
+          router.push("/");
+          console.log("Logged out");
+        }}
+      >
+        <IconLogout size={20} />
+      </Button>
+    );
+  }
+
+  useEffect(() => {
+    const ratings = reviews.map((review) => review.rating_value);
+    const min = Math.min(...ratings);
+    const max = Math.max(...ratings);
+    const mean = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+    const mid = Math.floor(ratings.length / 2);
+    const nums = [...ratings].sort((a, b) => a - b);
+    const med =
+      ratings.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+
+    setStatistics({ mean, min, med, max });
+  }, [refresh]);
 
   return (
     <div
@@ -377,8 +463,25 @@ export default function BlogPage(props: PaperProps) {
         height: "100vh",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          display: "flex",
+          gap: "10px",
+        }}
+      >
+        <Button onClick={() => router.push("/user-list")}>
+          <IconHome size={20} />
+        </Button>
+        <Button onClick={() => router.push("/account")}>
+          <IconUser size={20} />
+        </Button>
+        <LogOutButton />
+      </div>
       <div>
-        <h1 style={{ fontSize: "2em", fontWeight: "bold" }}>
+        <h1 style={{ fontSize: "2em", fontWeight: "bold", color: "gray" }}>
           Welcome to {blogPageUsername}'s Page
         </h1>
       </div>
@@ -431,7 +534,7 @@ export default function BlogPage(props: PaperProps) {
 
       <Paper
         radius="lg"
-        p="xl"
+        p="sm"
         withBorder
         {...props}
         style={{
@@ -449,19 +552,194 @@ export default function BlogPage(props: PaperProps) {
               marginBottom: "20px",
             }}
           >
-            {blogPageUsername === username ? <WriteReview /> : null}
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              {blogPageUsername === username ? <WriteReview /> : <div />}
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: username === blogPageUsername ? "-57px" : "-20px",
+              marginBottom: "20px",
+            }}
+          >
+            <Statistics {...statistics} />
           </div>
           {reviews.length === 0 ? (
-            <Text fz="md" c="dimmed">
+            <Text
+              fz="md"
+              c="dimmed"
+              style={{ position: "relative", top: "-5px", right: "-20px" }}
+            >
               User has no reviews.
             </Text>
           ) : (
-            reviews.map((review) => (
-              <Review key={review.timestamp} {...review} />
-            ))
+            reviews
+              .sort(
+                (a, b) =>
+                  new Date(b.timestamp).getTime() -
+                  new Date(a.timestamp).getTime()
+              )
+              .map((review, index) => (
+                <div
+                  key={review.timestamp}
+                  style={{
+                    position: "relative",
+                    marginBottom: "10px",
+                    marginTop: "-5px",
+                  }}
+                >
+                  {username === blogPageUsername && (
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      style={{
+                        position: "absolute",
+                        top: "10px",
+                        right: "10px",
+                      }}
+                      onClick={() => handleDelete(String(review.review_id))}
+                    >
+                      <IconTrash
+                        style={{
+                          width: rem(20),
+                          height: rem(20),
+                        }}
+                        stroke={1.5}
+                      />
+                    </ActionIcon>
+                  )}
+                  <Review {...review} />
+                </div>
+              ))
           )}
         </TypographyStylesProvider>
       </Paper>
     </div>
+  );
+}
+
+interface titleInputProps {
+  title: string;
+  setTitle: React.Dispatch<React.SetStateAction<string>>;
+}
+
+function TitleInput({ title, setTitle }: titleInputProps) {
+  return (
+    <TextInput
+      label="Title"
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+    />
+  );
+}
+
+interface DirectorInputProps {
+  director: string;
+  setDirector: React.Dispatch<React.SetStateAction<string>>;
+}
+
+function DirectorInput({ director, setDirector }: DirectorInputProps) {
+  return (
+    <TextInput
+      label="Director"
+      value={director}
+      onChange={(e) => setDirector(e.target.value)}
+    />
+  );
+}
+
+interface YearInputProps {
+  year: string;
+  setYear: React.Dispatch<React.SetStateAction<string>>;
+}
+
+function YearInput({ year, setYear }: YearInputProps) {
+  const [error, setError] = useState("");
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.currentTarget.value;
+    const isNaturalNumber = /^[1-9]\d*$/.test(inputValue);
+
+    if (isNaturalNumber || inputValue === "") {
+      setYear(inputValue);
+      setError("");
+    } else {
+      setError("Input must be a year");
+    }
+  };
+
+  return (
+    <TextInput
+      label="Year"
+      value={year}
+      onChange={handleInputChange}
+      autoComplete="nope"
+      error={error}
+    />
+  );
+}
+
+interface SliderProps {
+  sliderValue: number;
+  setSliderValue: React.Dispatch<React.SetStateAction<number>>;
+}
+
+function ReviewSlider({ sliderValue, setSliderValue }: SliderProps) {
+  const marks = [
+    { value: 0, label: "0" },
+    { value: 1, label: "1" },
+    { value: 2, label: "2" },
+    { value: 3, label: "3" },
+    { value: 4, label: "4" },
+    { value: 5, label: "5" },
+    { value: 6, label: "6" },
+    { value: 7, label: "7" },
+    { value: 8, label: "8" },
+    { value: 9, label: "9" },
+    { value: 10, label: "10" },
+  ];
+  return (
+    <>
+      <Slider
+        value={sliderValue}
+        onChange={(val) => setSliderValue(val)}
+        min={0}
+        max={10}
+        label={(val) => marks.find((mark) => mark.value === val)!.label}
+        step={1}
+        marks={marks}
+        styles={{
+          markLabel: { display: "none" },
+          root: { marginBottom: "20px" },
+        }}
+      />
+    </>
+  );
+}
+
+interface StatisticsProps {
+  mean: number;
+  min: number;
+  med: number;
+  max: number;
+}
+
+function Statistics({ mean, min, med, max }: StatisticsProps) {
+  return (
+    <Group justify="center">
+      <HoverCard width={175} shadow="md">
+        <HoverCard.Target>
+          <Button>Statistics</Button>
+        </HoverCard.Target>
+        <HoverCard.Dropdown>
+          <Text size="lg">Mean Rating: {mean.toFixed(2)}</Text>
+          <Text size="sm">Minimum: {min}</Text>
+          <Text size="sm">Median: {med.toFixed(2)}</Text>
+          <Text size="sm">Maximum: {max}</Text>
+        </HoverCard.Dropdown>
+      </HoverCard>
+    </Group>
   );
 }

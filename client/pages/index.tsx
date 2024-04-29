@@ -7,7 +7,7 @@ const Home = () => {
   return (
     <div>
       {/* Other components or content of your home page */}
-      <UserList />
+      <AuthPage />
     </div>
   );
 };

@@ -23,6 +23,7 @@ import Superscript from "@tiptap/extension-superscript";
 import SubScript from "@tiptap/extension-subscript";
 
 import { modals } from "@mantine/modals";
+import { IconHome, IconLogout } from "@tabler/icons-react";
 
 const PRIMARY_COL_HEIGHT = rem(440);
 
@@ -38,10 +39,20 @@ export default function AccountGrid(props: PaperProps) {
           router.push("/");
           console.log("Logged out");
         }}
-        style={{ borderRadius: "12px", height: "45px" }}
-        size="md"
       >
-        Log out
+        <IconLogout size={20} />
+      </Button>
+    );
+  }
+
+  function HomeButton() {
+    return (
+      <Button
+        onClick={() => {
+          router.push("/user-list");
+        }}
+      >
+        <IconHome size={20} />
       </Button>
     );
   }
@@ -200,7 +211,16 @@ export default function AccountGrid(props: PaperProps) {
 
   return (
     <div className="">
-      <div style={{ position: "absolute", top: "30px", right: "30px" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          display: "flex",
+          gap: "10px",
+        }}
+      >
+        <HomeButton />
         <LogOutButton />
       </div>
       <Paper
@@ -209,7 +229,10 @@ export default function AccountGrid(props: PaperProps) {
         {...props}
         className="w-5/6 mx-auto mt-40 overflow-auto p-5"
       >
-        <h1 style={{ textAlign: "center" }} className="text-2xl font-bold">
+        <h1
+          style={{ textAlign: "center", color: "gray" }}
+          className="text-2xl font-bold"
+        >
           Account Management
         </h1>
         <Container my="md">

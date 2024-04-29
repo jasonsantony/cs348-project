@@ -12,12 +12,15 @@ import {
   rem,
   keys,
   PaperProps,
+  Button,
 } from "@mantine/core";
 import {
   IconSelector,
   IconChevronDown,
   IconChevronUp,
   IconSearch,
+  IconUser,
+  IconLogout,
 } from "@tabler/icons-react";
 import classes from "../styles/user-list.module.css";
 import { Router, useRouter } from "next/router";
@@ -197,16 +200,50 @@ export default function UserList(props: PaperProps) {
     );
   }
 
+  function LogOutButton() {
+    return (
+      <Button
+        onClick={() => {
+          localStorage.clear();
+          router.push("/");
+          console.log("Logged out");
+        }}
+      >
+        <IconLogout size={20} />
+      </Button>
+    );
+  }
+
   return (
     <div
       className={classes.wrapper}
       style={{
         display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
         height: "100vh",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          display: "flex",
+          gap: "10px",
+        }}
+      >
+        <Button onClick={() => router.push("/account")}>
+          <IconUser size={20} />
+        </Button>
+        <LogOutButton />
+      </div>
+      <div>
+        <h1 style={{ fontSize: "2em", fontWeight: "bold", color: "gray" }}>
+          Rate Shows and Stuff
+        </h1>
+      </div>
       <Paper
         radius="lg"
         p="xl"
@@ -215,7 +252,7 @@ export default function UserList(props: PaperProps) {
         style={{
           maxWidth: "87.5%",
           width: "100%",
-          height: "75vh",
+          height: "82.5vh",
           overflow: "auto",
         }}
       >
