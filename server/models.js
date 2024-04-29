@@ -33,7 +33,7 @@ const User = sequelize.define(
   },
   {
     indexes: [
-      { unique: true, fields: ["username"] }, // Index for username field
+      { unique: true, fields: ["username"] }, // Index for username field of User
     ],
   }
 );
@@ -76,7 +76,7 @@ const Review = sequelize.define(
   },
   {
     indexes: [
-      { fields: ["user_id"] }, // Index for user_id field
+      { fields: ["user_id"] }, // Index for user_id field of Review
     ],
   }
 );
