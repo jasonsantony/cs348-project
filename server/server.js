@@ -146,8 +146,7 @@ app.get("/api/user-list", async (req, res) => {
       attributes: ["username", "bio"],
     });
     const result = users.map((user) => {
-      const bioMatch = user.bio.match(/<.*?>(.*?)<\/.*?>/);
-      const bio = bioMatch ? bioMatch[1] : "";
+      const bio = user.bio.replace(/<[^>]*>/g, "");
       const trimmedBio = bio.length > 100 ? `${bio.substring(0, 100)}...` : bio;
       return {
         username: user.username,
